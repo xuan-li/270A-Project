@@ -16,7 +16,10 @@ if __name__=='__main__':
     args = parser.parse_args()
     problem = mmcv.Config.fromfile(args.config)['problem']
     method = problem["method"]
-    device = torch.device(problem["device"])
+    if torch.cuda.is_available():
+        device = torch.device(problem["device"])
+    else:
+        device = torch.device('cpu')
     X_recon = method(problem["observed_matrix"].to(device), 
                      problem["mask"].to(device), 
                      problem["step"], 
