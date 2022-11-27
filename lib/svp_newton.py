@@ -35,7 +35,6 @@ def svp_newton(observed_matrix,mask,step,k,maxIter,tol):
             break
         Y = X - step * g
         U, S, Vh = torch.linalg.svd(Y, full_matrices=False)
-        C = X.shape[0]
 
         ####
         S0 = torch.diag_embed(S[:, :k])
