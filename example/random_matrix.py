@@ -1,11 +1,13 @@
 import torch
-from lib import svp
+from lib import svp, svp_newton
 
-M = 10
-N = 20
-rank = 2
+torch.random.manual_seed(123)
+M = 100
+N = 200
+C = 3
+rank = 10
 
-gt = torch.rand((1, M, N))
+gt = torch.rand((C, M, N))
 U, S, Vh = torch.linalg.svd(gt,full_matrices=False)
 S[:, rank:] = 0
 gt = U @ torch.diag_embed(S) @ Vh
@@ -23,7 +25,8 @@ problem = dict(
     rank=rank,
     observed_matrix=observed_matrix,
     mask=mask,
-    method=svp,
+    method=svp_newton,
+    # method=svp,
     step=1,
     tol=1e-4,
     device="cuda:0"

@@ -2,12 +2,23 @@ import torch
 import numpy as np
 from scipy.optimize import least_squares
 
-def fun_rosenbrock(x, u, vh, ob, mk):
-    [M, N, k] = [u.shape[0], vh.shape[1], u.shape[1]]
-    x = x.reshape(k, k)
-    x = mk * (u @ x @ vh - ob)
-    return x.reshape(M * N, )
+def loss_func(x, u, vh, ob, mk):
+    res = mk[None] * (u @ x @ vh - ob)
+    loss = (res ** 2).sum()
+    return loss
 
+def lbfgs_least_square(x, u, vh, ob, mk):
+    x = x.clone().requires_grad_()
+    optimizer = torch.optim.LBFGS([x], max_iter=10000, lr=1, tolerance_change=1e-20, tolerance_grad=1e-4)
+    losses = []
+    def closure():
+        optimizer.zero_grad()
+        loss = loss_func(x, u, vh, ob, mk)
+        loss.backward()
+        losses.append(loss.clone())
+        return loss
+    optimizer.step(closure)
+    return x.data
 
 @torch.no_grad()
 def svp_newton(observed_matrix,mask,step,k,maxIter,tol):
@@ -24,20 +35,15 @@ def svp_newton(observed_matrix,mask,step,k,maxIter,tol):
             break
         Y = X - step * g
         U, S, Vh = torch.linalg.svd(Y, full_matrices=False)
+        C = X.shape[0]
 
         ####
-        x0 = np.zeros(k * k)
-        u = np.array(U[0, :, 0:k])
-        v = np.array(Vh[0, 0:k, :])
-        ob = np.array(observed_matrix[0, :, :])
-        mk = np.array(mask)
-        res = least_squares(fun_rosenbrock, x0, args=(u, v, ob, mk))
+        S0 = torch.diag_embed(S[:, :k])
+        u = U[:, :, 0:k]
+        vh = Vh[:, 0:k, :]
+        ob = observed_matrix[:, :, :] 
+        xx = lbfgs_least_square(S0, u, vh, ob, mask)
+        xx = u @ xx @ vh
+        X = xx.reshape(X.shape)
 
-        xx = res.x.reshape(k, k)
-        xx = u @ xx @ v
-        xx = torch.from_numpy(xx)
-        X = torch.reshape(xx, X.shape)
-
-        # S[:, k:] = 0
-        # X = U @ torch.diag_embed(S) @ Vh
     return X
