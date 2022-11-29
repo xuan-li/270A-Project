@@ -3,21 +3,19 @@ from lib import svp, svp_newton
 import matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
+from torchvision.io import read_image
 
 torch.random.manual_seed(123)
 
-im_frame = Image.open('example/MITlogo.png')
-np_frame = np.array(im_frame.getdata())
-M = 46
-N = 81
-np_frame = np_frame.reshape((M,N,4))
-np_frame = np_frame[:,:,0]
-gt = torch.from_numpy(np_frame[None]).double() # 1*46*84
+im_frame = read_image('example/MITlogo.png')[:3, :]/255.
+C = im_frame.shape[0]
+M = im_frame.shape[1]
+N = im_frame.shape[2]
+gt = im_frame # 1*46*84
 
-C = 1
 rank = 5
 
-indices = torch.randperm(M * N)[: int(0.6 * M * N)]  # 20% elements are observed
+indices = torch.randperm(M * N)[: int(0.6 * M * N)]  
 mask = torch.zeros(M * N, dtype=torch.int32)
 mask[indices] = 1
 mask = mask.reshape([M, N])

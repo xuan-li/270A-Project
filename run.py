@@ -1,6 +1,7 @@
 import mmcv
 import argparse
 import torch
+from lib import Timer
 
 def config_parser():
     '''Define command line arguments
@@ -20,12 +21,13 @@ if __name__=='__main__':
         device = torch.device(problem["device"])
     else:
         device = torch.device('cpu')
-    X_recon = method(problem["observed_matrix"].to(device), 
-                     problem["mask"].to(device), 
-                     problem["step"], 
-                     problem["rank"], 
-                     100000, 
-                     problem["tol"])
+    with Timer("recon"):
+        X_recon = method(problem["observed_matrix"].to(device), 
+                        problem["mask"].to(device), 
+                        problem["step"], 
+                        problem["rank"], 
+                        100000, 
+                        problem["tol"])
     error = torch.abs(problem["gt"] - X_recon.cpu()).max()
     print(f"Error: {error.item()}")
 
