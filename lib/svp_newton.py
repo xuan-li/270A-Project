@@ -21,15 +21,16 @@ def lbfgs_least_square(x, u, vh, ob, mk):
     return x.data
 
 @torch.no_grad()
-def svp_newton(observed_matrix,mask,step,k,maxIter,tol):
+def svp_newton(observed_matrix,mask,step,k,maxIter,tol, status={}):
     '''
     observed_matrix: (C, M, N) with only a few observations
     mask: (M, N)
     '''
     X = torch.zeros_like(observed_matrix)
+    r0 = (observed_matrix).abs().max()
     for i in range(maxIter):
         g = mask[None] * (X - observed_matrix)
-        res = torch.abs(g).max()
+        res = g.abs().max() / r0
         print(f"Iter: {i}, residual: {res}")
         if res  < tol:
             break
@@ -44,5 +45,5 @@ def svp_newton(observed_matrix,mask,step,k,maxIter,tol):
         xx = lbfgs_least_square(S0, u, vh, ob, mask)
         xx = u @ xx @ vh
         X = xx.reshape(X.shape)
-
+    status["iter"] = i
     return X
