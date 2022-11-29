@@ -10,7 +10,7 @@ running_time_svp = []
 running_time_svp_newton = []
 iteration_svp = []
 iteration_svp_newton = []
-for N in torch.linspace(100, 5000, 1):
+for N in torch.linspace(100, 5000, 10):
     # prepare data
     tol = 1e-3
     N = int(N)
