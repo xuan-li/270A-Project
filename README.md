@@ -1,5 +1,9 @@
 # 270A-Project
 
+Reproduce the following paper:
+
+> Jain, Prateek, Raghu Meka, and Inderjit Dhillon. "[Guaranteed rank minimization via singular value projection](https://proceedings.neurips.cc/paper/2010/file/08d98638c6fcd194a4b1e6992063e944-Paper.pdf)." Advances in Neural Information Processing Systems 23 (2010).
+
 ## Dependencies
 
 ### install miniconda
@@ -23,4 +27,3 @@ pip install -r requirements.txt
 ```python
 python run.py --config=example/random_matrix.py 
 ```
-
