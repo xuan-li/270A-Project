@@ -10,12 +10,12 @@ running_time_svp = []
 running_time_svp_newton = []
 iteration_svp = []
 iteration_svp_newton = []
-for N in torch.linspace(100, 5000, 10):
+for N in torch.linspace(100, 1000, 10):
     # prepare data
     tol = 1e-3
     N = int(N)
-    k = 2
-    p = 0.2
+    k = 10
+    p = 0.4
     indices = torch.randperm(N * N)[: int(p * N * N)]  # 20% elements are observed
     mask = torch.zeros(N * N, dtype=torch.int32)
     mask[indices] = 1
@@ -28,7 +28,7 @@ for N in torch.linspace(100, 5000, 10):
 
     observed_matrix = observed_matrix.to(device)
     mask = mask.to(device)
-    step = 1
+    step = 0.1
     tol = 1e-3
 
     # run svp

@@ -20,6 +20,9 @@ def lbfgs_least_square(x, u, vh, ob, mk):
     optimizer.step(closure)
     return x.data
 
+def energy(X, observed_matrix, mask):
+    return ((mask[None] * (observed_matrix - X)) ** 2).sum()
+
 @torch.no_grad()
 def svp_newton(observed_matrix,mask,step,k,maxIter,tol, status={}):
     '''
@@ -34,16 +37,22 @@ def svp_newton(observed_matrix,mask,step,k,maxIter,tol, status={}):
         print(f"Iter: {i}, residual: {res}")
         if res  < tol:
             break
-        Y = X - step * g
-        U, S, Vh = torch.linalg.svd(Y, full_matrices=False)
-
-        ####
-        S0 = torch.diag_embed(S[:, :k])
-        u = U[:, :, 0:k]
-        vh = Vh[:, 0:k, :]
-        ob = observed_matrix[:, :, :] 
-        xx = lbfgs_least_square(S0, u, vh, ob, mask)
-        xx = u @ xx @ vh
+        E0 = energy(X, observed_matrix, mask)
+        E1 = 1e30
+        alpha = 1
+        
+        while E1 > E0:
+            Y = X - alpha * g
+            U, S, Vh = torch.linalg.svd(Y, full_matrices=False)
+            S0 = torch.diag_embed(S[:, :k])
+            u = U[:, :, 0:k]
+            vh = Vh[:, 0:k, :]
+            ob = observed_matrix[:, :, :] 
+            xx = lbfgs_least_square(S0, u, vh, ob, mask)
+            xx = u @ xx @ vh
+            E1 = energy(xx, observed_matrix, mask)
+            alpha /= 2
+        
         X = xx.reshape(X.shape)
     status["iter"] = i
     return X
